@@ -1,6 +1,6 @@
 # 楽天の指定年の領収書を一括でダウンロードするプログラムをSelenium（Ruby）で組んでみた
 [brandnew.work](https://brandnew.work/) の記事より  
-詳細は[こちら](https://brandnew.work/column/ruby/rakuten-invoice/](https://brandnew.work/column/ruby/dl-all-rakuten_invoices/)から
+詳細は[こちら](https://brandnew.work/column/ruby/dl-all-rakuten_invoices/)から
 
 ## 留意点
 通常とは異なる領収書発行が必要な決済については手動  
