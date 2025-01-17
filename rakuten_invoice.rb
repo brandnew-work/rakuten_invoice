@@ -7,13 +7,15 @@ p 'パスワードを入力してください'
 password = gets.chomp
 p '取得する年を入力してください'
 year = gets.chomp
-p '請求書の宛名を入力してください'
-$myname = gets.chomp
-# 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
-p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
-confirmation = gets.chomp.upcase
-break if confirmation == 'Y'
-p '宛名を再入力してください。' unless confirmation == 'N'
+loop do
+  p '請求書の宛名を入力してください'
+  $myname = gets.chomp
+  # 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
+  p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
+  confirmation = gets.chomp.upcase
+  break if confirmation == 'Y'
+  p '宛名を再入力してください。' if confirmation == 'N'
+end
 
 def getInvoice(session)
   pp "start: #{session.current_url}"
