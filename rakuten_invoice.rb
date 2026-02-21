@@ -1,20 +1,25 @@
 require 'selenium-webdriver'
 require 'pdf-reader'
+require 'dotenv'
+Dotenv.load
 
-p 'IDを入力してください'
-id = gets.chomp
-p 'パスワードを入力してください'
-password = gets.chomp
-p '取得する年を入力してください'
-year = gets.chomp
-loop do
-  p '請求書の宛名を入力してください'
-  $myname = gets.chomp
-  # 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
-  p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
-  confirmation = gets.chomp.upcase
-  break if confirmation == 'Y'
-  p '宛名を再入力してください。' if confirmation == 'N'
+id       = ENV['RAKUTEN_ID']       || (p 'IDを入力してください';       gets.chomp)
+password = ENV['RAKUTEN_PASSWORD'] || (p 'パスワードを入力してください'; gets.chomp)
+year     = ENV['RAKUTEN_YEAR']     || (p '取得する年を入力してください'; gets.chomp)
+
+if ENV['RAKUTEN_NAME']
+  $myname = ENV['RAKUTEN_NAME']
+  p "宛名: #{$myname}（.envより）"
+else
+  loop do
+    p '請求書の宛名を入力してください'
+    $myname = gets.chomp
+    # 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
+    p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
+    confirmation = gets.chomp.upcase
+    break if confirmation == 'Y'
+    p '宛名を再入力してください。' if confirmation == 'N'
+  end
 end
 
 def getInvoice(session)
@@ -58,8 +63,8 @@ def getInvoice(session)
   end
 end
 
-# 保存先ディレクトリを指定
-download_path = File.expand_path('./invoices')
+# 保存先ディレクトリを指定（.envのRAKUTEN_DOWNLOAD_PATHで変更可、デフォルト: ./invoices）
+download_path = File.expand_path(ENV['RAKUTEN_DOWNLOAD_PATH'] || './invoices')
 # 保存先ディレクトリを作成
 Dir.mkdir(download_path) unless Dir.exist?(download_path)
 
@@ -78,20 +83,26 @@ session = Selenium::WebDriver.for :chrome, options: options
 # 10秒経過しても進まない場合はエラー
 session.manage.timeouts.implicit_wait = 10
 
-# ログイン処理
-session.navigate.to 'https://grp02.id.rakuten.co.jp/rms/nid/vc?__event=login&service_id=s08&fidomy=1'
-login_form = session.find_element(:name, 'LoginForm')
-login_name = session.find_element(:name, 'u')
-login_pass = session.find_element(:name, 'p')
-login_name.send_keys(id)
-login_pass.send_keys(password)
-login_form.submit
+# ログイン処理（2段階ログイン対応）
+# 購入履歴ページへアクセスするとログインページへリダイレクトされる
+session.navigate.to 'https://order.my.rakuten.co.jp/'
+sleep(3)
 
-sleep(1)
+# ステップ1: ユーザーID/メールアドレスを入力してEnter（buttonタグは存在しない）
+login_name = session.find_element(:id, 'user_id')
+login_name.send_keys(id)
+login_name.send_keys(:return)
+sleep(3)
+
+# ステップ2: パスワードを入力してEnter
+login_pass = session.find_element(:id, 'password_current')
+login_pass.send_keys(password)
+login_pass.send_keys(:return)
+sleep(5)
 
 # 購入履歴ページへ移動
-session.find_element(:xpath, "//a[@aria-label='購入履歴']").click
-sleep(1)
+session.navigate.to 'https://order.my.rakuten.co.jp/'
+sleep(2)
 
 # 指定年の購入履歴ページへ移動
 year_value = session.find_element(:name, 'year')
@@ -142,7 +153,6 @@ session.quit
 # 領収書pdfファイル名を変更
 invoice_files = Dir.glob("#{download_path}/*.pdf")
 invoice_files.each do |path|
-  pdf_file = File.basename(path)
   reader = PDF::Reader.new(path)
 
   # pdfの2ページ目に対する処理は不要なので、1ページ目のみ処理する
@@ -155,7 +165,6 @@ invoice_files.each do |path|
       full_date = page_text.match(/注文日[:|：][\s]??([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日??/)
       date = "#{full_date[1]}#{full_date[2].rjust(2, '0')}#{full_date[3].rjust(2, '0')}"
       store = page_text.match(/但し[:|：][\s]??(.+)との取引/)[1]
-      new_file_name = "#{download_path}/#{date}_#{store}_#{price}.pdf"
       base_name = "#{date}_#{store}_#{price}.pdf"
       new_file_name = File.join(download_path, base_name)
 
