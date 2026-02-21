@@ -83,20 +83,26 @@ session = Selenium::WebDriver.for :chrome, options: options
 # 10秒経過しても進まない場合はエラー
 session.manage.timeouts.implicit_wait = 10
 
-# ログイン処理
+# ログイン処理（2段階ログイン対応）
 # 購入履歴ページへアクセスするとログインページへリダイレクトされる
 session.navigate.to 'https://order.my.rakuten.co.jp/'
-login_name = session.find_element(:name, 'u')
-login_pass = session.find_element(:name, 'p')
+sleep(3)
+
+# ステップ1: ユーザーID/メールアドレスを入力してEnter（buttonタグは存在しない）
+login_name = session.find_element(:id, 'user_id')
 login_name.send_keys(id)
+login_name.send_keys(:return)
+sleep(3)
+
+# ステップ2: パスワードを入力してEnter
+login_pass = session.find_element(:id, 'password_current')
 login_pass.send_keys(password)
 login_pass.send_keys(:return)
-
-sleep(1)
+sleep(5)
 
 # 購入履歴ページへ移動
-session.find_element(:xpath, "//a[@aria-label='購入履歴']").click
-sleep(1)
+session.navigate.to 'https://order.my.rakuten.co.jp/'
+sleep(2)
 
 # 指定年の購入履歴ページへ移動
 year_value = session.find_element(:name, 'year')
