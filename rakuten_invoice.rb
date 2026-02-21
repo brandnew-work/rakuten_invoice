@@ -79,13 +79,13 @@ session = Selenium::WebDriver.for :chrome, options: options
 session.manage.timeouts.implicit_wait = 10
 
 # ログイン処理
-session.navigate.to 'https://grp02.id.rakuten.co.jp/rms/nid/vc?__event=login&service_id=s08&fidomy=1'
-login_form = session.find_element(:name, 'LoginForm')
+# 購入履歴ページへアクセスするとログインページへリダイレクトされる
+session.navigate.to 'https://order.my.rakuten.co.jp/'
 login_name = session.find_element(:name, 'u')
 login_pass = session.find_element(:name, 'p')
 login_name.send_keys(id)
 login_pass.send_keys(password)
-login_form.submit
+login_pass.send_keys(:return)
 
 sleep(1)
 
