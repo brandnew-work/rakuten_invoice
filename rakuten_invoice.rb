@@ -63,8 +63,8 @@ def getInvoice(session)
   end
 end
 
-# 保存先ディレクトリを指定
-download_path = File.expand_path('./invoices')
+# 保存先ディレクトリを指定（.envのRAKUTEN_DOWNLOAD_PATHで変更可、デフォルト: ./invoices）
+download_path = File.expand_path(ENV['RAKUTEN_DOWNLOAD_PATH'] || './invoices')
 # 保存先ディレクトリを作成
 Dir.mkdir(download_path) unless Dir.exist?(download_path)
 
@@ -153,7 +153,6 @@ session.quit
 # 領収書pdfファイル名を変更
 invoice_files = Dir.glob("#{download_path}/*.pdf")
 invoice_files.each do |path|
-  pdf_file = File.basename(path)
   reader = PDF::Reader.new(path)
 
   # pdfの2ページ目に対する処理は不要なので、1ページ目のみ処理する
@@ -166,7 +165,6 @@ invoice_files.each do |path|
       full_date = page_text.match(/注文日[:|：][\s]??([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日??/)
       date = "#{full_date[1]}#{full_date[2].rjust(2, '0')}#{full_date[3].rjust(2, '0')}"
       store = page_text.match(/但し[:|：][\s]??(.+)との取引/)[1]
-      new_file_name = "#{download_path}/#{date}_#{store}_#{price}.pdf"
       base_name = "#{date}_#{store}_#{price}.pdf"
       new_file_name = File.join(download_path, base_name)
 
