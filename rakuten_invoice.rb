@@ -1,20 +1,25 @@
 require 'selenium-webdriver'
 require 'pdf-reader'
+require 'dotenv'
+Dotenv.load
 
-p 'IDを入力してください'
-id = gets.chomp
-p 'パスワードを入力してください'
-password = gets.chomp
-p '取得する年を入力してください'
-year = gets.chomp
-loop do
-  p '請求書の宛名を入力してください'
-  $myname = gets.chomp
-  # 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
-  p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
-  confirmation = gets.chomp.upcase
-  break if confirmation == 'Y'
-  p '宛名を再入力してください。' if confirmation == 'N'
+id       = ENV['RAKUTEN_ID']       || (p 'IDを入力してください';       gets.chomp)
+password = ENV['RAKUTEN_PASSWORD'] || (p 'パスワードを入力してください'; gets.chomp)
+year     = ENV['RAKUTEN_YEAR']     || (p '取得する年を入力してください'; gets.chomp)
+
+if ENV['RAKUTEN_NAME']
+  $myname = ENV['RAKUTEN_NAME']
+  p "宛名: #{$myname}（.envより）"
+else
+  loop do
+    p '請求書の宛名を入力してください'
+    $myname = gets.chomp
+    # 一度発行された領収書の宛名は変更不可のため、強めに聞いておく
+    p "一度発行された領収書の宛名は変更できません。「#{$myname}」で間違いありませんか？(Y/N)"
+    confirmation = gets.chomp.upcase
+    break if confirmation == 'Y'
+    p '宛名を再入力してください。' if confirmation == 'N'
+  end
 end
 
 def getInvoice(session)
