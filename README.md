@@ -15,19 +15,11 @@
 - selenium-webdriver 4.17.0
 - pdf-reader 2.12.0
 
-## .env
-
-```
-RAKUTEN_ID=your_rakuten_id
-RAKUTEN_PASSWORD=your_password
-RAKUTEN_YEAR=2025
-RAKUTEN_NAME=楽天太郎
-```
-
 ## Update
 
 ### 2026.02
 
+- 楽天の仕様変更に伴う修正
 - envファイルにて管理できるよう修正
 
 ### 2025.01
